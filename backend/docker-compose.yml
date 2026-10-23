@@ -1,0 +1,41 @@
+# docker compose up -d db          -> only PostgreSQL (run the app from IntelliJ/mvn)
+# docker compose up --build        -> PostgreSQL + the API in containers (needs JWT_SECRET in .env)
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: cabdb
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "127.0.0.1:5432:5432"        # only reachable from your own machine
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d cabdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/cabdb
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET (32+ chars) in your .env file}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@cab.local}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in your .env file}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_MOCK_ENABLED: ${STRIPE_MOCK_ENABLED:-true}
+      MAIL_ENABLED: ${MAIL_ENABLED:-false}
+
+volumes:
+  pgdata:

@@ -1,0 +1,125 @@
+### Works with IntelliJ HTTP Client and the VS Code "REST Client" extension.
+### Run top to bottom. Paste the tokens you get back into the variables below.
+
+@host = http://localhost:8080
+@riderToken = PASTE_RIDER_TOKEN
+@driverToken = PASTE_DRIVER_TOKEN
+@adminToken = PASTE_ADMIN_TOKEN
+@rideId = 1
+
+### 1. Register a rider
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "name": "Rita Rider", "email": "rita@example.com", "password": "password123", "role": "RIDER" }
+
+### 2. Register a driver
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "name": "Dev Driver", "email": "dev@example.com", "password": "password123", "role": "DRIVER",
+  "vehicleModel": "Swift Dzire", "vehiclePlate": "WB01AB1234" }
+
+### 3. Login as the seeded admin (ADMIN_EMAIL / ADMIN_PASSWORD from your environment)
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "email": "admin@cab.local", "password": "Admin@12345" }
+
+### 4. Who am I?
+GET {{host}}/api/users/me
+Authorization: Bearer {{riderToken}}
+
+### 5. Driver sends location, then goes online
+PUT {{host}}/api/drivers/me/location
+Authorization: Bearer {{driverToken}}
+Content-Type: application/json
+
+{ "lat": 22.5726, "lng": 88.3639 }
+
+###
+PUT {{host}}/api/drivers/me/status
+Authorization: Bearer {{driverToken}}
+Content-Type: application/json
+
+{ "status": "AVAILABLE" }
+
+### 6. Rider: price estimate, then book
+POST {{host}}/api/rides/estimate
+Authorization: Bearer {{riderToken}}
+Content-Type: application/json
+
+{ "pickup": { "lat": 22.5730, "lng": 88.3640, "address": "Park Street" },
+  "drop":   { "lat": 22.6200, "lng": 88.4000, "address": "Salt Lake" } }
+
+###
+POST {{host}}/api/rides
+Authorization: Bearer {{riderToken}}
+Content-Type: application/json
+
+{ "pickup": { "lat": 22.5730, "lng": 88.3640, "address": "Park Street" },
+  "drop":   { "lat": 22.6200, "lng": 88.4000, "address": "Salt Lake" } }
+
+### 7. Driver: see requests, accept, arrive, start (OTP is in the rider's ride response), complete
+GET {{host}}/api/rides/available
+Authorization: Bearer {{driverToken}}
+
+###
+POST {{host}}/api/rides/{{rideId}}/accept
+Authorization: Bearer {{driverToken}}
+
+###
+POST {{host}}/api/rides/{{rideId}}/arrived
+Authorization: Bearer {{driverToken}}
+
+###
+POST {{host}}/api/rides/{{rideId}}/start
+Authorization: Bearer {{driverToken}}
+Content-Type: application/json
+
+{ "otp": "1234" }
+
+###
+POST {{host}}/api/rides/{{rideId}}/complete
+Authorization: Bearer {{driverToken}}
+
+### 8. Rider: pay (mock mode), rate, download receipt
+POST {{host}}/api/payments/rides/{{rideId}}/intent
+Authorization: Bearer {{riderToken}}
+
+###
+POST {{host}}/api/payments/rides/{{rideId}}/mock-confirm
+Authorization: Bearer {{riderToken}}
+
+###
+POST {{host}}/api/ratings
+Authorization: Bearer {{riderToken}}
+Content-Type: application/json
+
+{ "rideId": 1, "stars": 5, "comment": "Great ride" }
+
+###
+GET {{host}}/api/rides/{{rideId}}/receipt
+Authorization: Bearer {{riderToken}}
+
+### 9. History, leaderboard
+GET {{host}}/api/rides/history?page=0&size=10
+Authorization: Bearer {{riderToken}}
+
+###
+GET {{host}}/api/drivers/top
+Authorization: Bearer {{riderToken}}
+
+### 10. Admin
+GET {{host}}/api/admin/stats
+Authorization: Bearer {{adminToken}}
+
+###
+POST {{host}}/api/admin/promos
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{ "code": "WELCOME20", "discountPercent": 20 }
+
+### 11. Health check (used by Docker/Render)
+GET {{host}}/actuator/health
