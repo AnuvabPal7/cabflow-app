@@ -1,13 +1,16 @@
+
 spring:
   application:
     name: cab-booking
+
   datasource:
-    url: jdbc:postgresql://ep-lively-bar-aolnx23j.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
-    username: neondb_owner
-    password: ${CB_PASSWORD}
+    url: ${DB_URL:jdbc:postgresql://ep-lively-bar-aolnx23j.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require}
+    username: ${DB_USER:neondb_owner}
+    password: ${DB_PASSWORD:${CB_PASSWORD}}
     hikari:
       maximum-pool-size: 5
       max-lifetime: 240000
+
   jpa:
     open-in-view: false
     hibernate:
@@ -16,12 +19,14 @@ spring:
       hibernate:
         jdbc:
           time_zone: UTC
+
   mail:
     host: localhost
     port: 587
     properties:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
+
   data:
     web:
       pageable:
@@ -29,8 +34,8 @@ spring:
         default-page-size: 20
 
 server:
-  port: ${PORT:8080}                      # Render/other hosts provide PORT
-  forward-headers-strategy: native        # behind a proxy, use the real client IP (keeps the login rate limit per user)
+  port: ${PORT:8080}
+  forward-headers-strategy: native
   shutdown: graceful
 
 management:
@@ -46,28 +51,35 @@ app:
   jwt:
     secret: ${JWT_SECRET}
     expiration-minutes: 60
+
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+
   admin:
     name: Admin
-    email: ""
-    password: ""
+    email: ${ADMIN_EMAIL:}
+    password: ${ADMIN_PASSWORD:}
+
   fare:
     currency: INR
     road-factor: 1.3
     avg-speed-kmh: 30
     tax-rate: 0.05
     driver-share: 0.80
+
   matching:
     radius-km: 5
     max-drivers: 5
     location-stale-minutes: 10
+
   stripe:
     secret-key: ""
     webhook-secret: ""
     mock-enabled: true
+
   mail:
     enabled: false
     from: no-reply@example.com
+
   rate-limit:
     auth-per-minute: 10
